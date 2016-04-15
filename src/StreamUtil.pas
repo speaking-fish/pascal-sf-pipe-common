@@ -1220,10 +1220,21 @@ function TNormalHandleStream.handle(): integer;
     result:= _origin.handle;
   end;
 
+function isStdOutHandle(handle: THandle): boolean;
+  begin
+    result:= handle = {$ifdef fpc} StdOutputHandle {$else} GetStdHandle(STD_OUTPUT_HANDLE) {$endif};
+  end;
+
+function isStdErrHandle(handle: THandle): boolean;
+  begin
+    result:= handle = {$ifdef fpc} StdErrorHandle {$else} GetStdHandle(STD_ERROR_HANDLE) {$endif};
+  end;
+
 procedure flushStream(stream: THandleStream);
   begin
     {$ifndef unix}
-      flushFileBuffers(stream.handle);
+      if not isStdOutHandle(stream.handle) and not isStdErrHandle(stream.handle) then
+        flushFileBuffers(stream.handle);
     {$else}
       fpfsync(stream.handle);
     {$endif}
